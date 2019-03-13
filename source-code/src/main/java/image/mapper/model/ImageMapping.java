@@ -1,6 +1,7 @@
 package image.mapper.model;
 
 import java.awt.Point;
+import java.awt.Polygon;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,6 +58,20 @@ public class ImageMapping {
 		return str;
 	}
 	
-	
+	public List<ImageRegion> getImageRegionsContainsPoint(Point point)
+	{
+		List<ImageRegion> imageRegionsContainsPoint = new LinkedList<ImageRegion>();
+		for (ImageRegion imageRegion : regionsList) {
+			Polygon polygon = new Polygon();
+			for (Point pointItem : imageRegion.getPointList()) {
+				polygon.addPoint(pointItem.x, pointItem.y);
+			}
+			if(polygon.contains(point))
+			{
+				imageRegionsContainsPoint.add(imageRegion);
+			}
+		}
+		return imageRegionsContainsPoint;
+	}
 	
 }
