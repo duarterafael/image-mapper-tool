@@ -32,7 +32,6 @@ public class MainView {
 	private static ImageMapping backImageMapping = new ImageMapping("", "");
 	private static ImageRegion currentImageRegion = null;
 	private static JLabel pointPosition = new JLabel("NaN");
-	
 
 	public static void createAndShowGUI() {
 		JFrame.setDefaultLookAndFeelDecorated(true);
@@ -56,6 +55,8 @@ public class MainView {
 		private DrawingArea drawingArea;
 		private JFrame frame;
 		private JTextField regionLabelTF;
+		private JButton backStepButton = null;
+		private JButton nextStepButton = null;
 
 		private String CLEAR_DRAWING_LABEL = "Clear";
 		private String BACK_STEP_LABEL = "<<Back step";
@@ -69,8 +70,12 @@ public class MainView {
 
 			addDrawingArea();
 			add(createButton(CLEAR_DRAWING_LABEL, null));
-			add(createButton(BACK_STEP_LABEL, null));
-			add(createButton(NEXT_STEP_LABEL, null));
+			backStepButton = createButton(BACK_STEP_LABEL, null);
+//			backStepButton.setEnabled(false);
+			add(backStepButton);
+			nextStepButton = createButton(NEXT_STEP_LABEL, null);
+//			nextStepButton.setEnabled(false);
+			add(nextStepButton);
 			add(createButton(SAVE_REGION_LABEL, null));
 			add(regionLabelTF);
 			add(createButton(SAVE_MAPPING_LABEL, null));
@@ -97,7 +102,8 @@ public class MainView {
 			} else if (SAVE_MAPPING_LABEL.equals(e.getActionCommand())) {
 
 			} else if (SAVE_REGION_LABEL.equals(e.getActionCommand())) {
-				if (imageMapping.getLastRegion().getPointList().isEmpty()) {					JOptionPane.showMessageDialog(frame, "Please select a region before saving action.",
+				if (imageMapping.getLastRegion().getPointList().isEmpty()) {
+					JOptionPane.showMessageDialog(frame, "Please select a region before saving action.",
 							"Warning Message", JOptionPane.WARNING_MESSAGE);
 				} else if (imageMapping.getLastRegion().getPointList().size() <= 2) {
 					JOptionPane.showMessageDialog(frame, "A region must be composed of at least three points.",
@@ -127,45 +133,82 @@ public class MainView {
 
 		private void nextStepAction() {
 			if (!backImageMapping.getRegionsList().isEmpty()) {
-				int lastIndex = backImageMapping.getLastRegion().getPointList().size() == 1 ? 0
-						: backImageMapping.getLastRegion().getPointList().size() - 1;
-				if (imageMapping.getRegionsList().isEmpty()) {
-					imageMapping.addRegionsList(new ImageRegion(backImageMapping.getLastRegion().getLabel()));
-				} else {
-					imageMapping.getLastRegion().setLabel(backImageMapping.getLastRegion().getLabel());
+				
+				if(imageMapping.getRegionsList().isEmpty() || backImageMapping.getLastRegion().getPointList().isEmpty())
+				{
+					imageMapping.getRegionsList().add(new ImageRegion(backImageMapping.getLastRegion().getLabel()));
+					if(backImageMapping.getLastRegion().getPointList().isEmpty())
+					{
+						backImageMapping.removeLastRegion();
+					}
 				}
-				imageMapping.getLastRegion().getPointList()
-						.add(backImageMapping.getLastRegion().getPointList().get(lastIndex));
-				backImageMapping.getLastRegion().getPointList().remove(lastIndex);
-				buildDrawingArea();
+				
+				if(!backImageMapping.getLastRegion().getPointList().isEmpty())
+				{
+					int lastIndex = backImageMapping.getLastRegion().getPointList().size() - 1;
+					
+					imageMapping.getLastRegion().getPointList()
+					.add(backImageMapping.getLastRegion().getPointList().get(lastIndex));
+					
+					imageMapping.getLastRegion().setLabel(backImageMapping.getLastRegion().getLabel());
+					
+					backImageMapping.getLastRegion().getPointList().remove(lastIndex);
+				}
+				
 			}
-
+			
+			if(imageMapping.getRegionsList().isEmpty())
+			{
+				nextStepButton.setEnabled(false);
+			}else if(imageMapping.getRegionsList().size() == 1){
+				if(imageMapping.getLastRegion().getPointList().isEmpty())
+				{
+					nextStepButton.setEnabled(false);
+				}else
+				{
+					backStepButton.setEnabled(true);
+				}
+			}
+			buildDrawingArea();
 		}
 
 		private void backStepAction() {
-			if (!imageMapping.getRegionsList().isEmpty() && !imageMapping.getLastRegion().getPointList().isEmpty()) {
-				int lastIndex = imageMapping.getLastRegion().getPointList().size() == 1 ? 0
-						: imageMapping.getLastRegion().getPointList().size() - 1;
-				if (backImageMapping.getRegionsList().isEmpty()) {
+			if (!imageMapping.getRegionsList().isEmpty()) {
+				if (backImageMapping.getRegionsList().isEmpty()
+						|| imageMapping.getLastRegion().getPointList().isEmpty()) {
 					backImageMapping.getRegionsList().add(new ImageRegion(imageMapping.getLastRegion().getLabel()));
-				}
-				backImageMapping.getLastRegion().getPointList()
-						.add(imageMapping.getLastRegion().getPointList().get(lastIndex));
-				imageMapping.getLastRegion().getPointList().remove(lastIndex);
-				if (lastIndex == 0) {
-					if (imageMapping.getRegionsList().size() != 1) {
-						backImageMapping.addRegionsList(new ImageRegion(null));
+					if (imageMapping.getLastRegion().getPointList().isEmpty()) {
+						imageMapping.removeLastRegion();
 					}
-					imageMapping.removeLastRegion();
-
-				}
-				if (backImageMapping.getLastRegion().getPointList().isEmpty()) {
-					backImageMapping.removeLastRegion();
 				}
 
-				buildDrawingArea();
+				if (!imageMapping.getLastRegion().getPointList().isEmpty()) {
+					int lastIndex = imageMapping.getLastRegion().getPointList().size() - 1;
+
+					backImageMapping.getLastRegion().getPointList()
+							.add(imageMapping.getLastRegion().getPointList().get(lastIndex));
+
+					backImageMapping.getLastRegion().setLabel(imageMapping.getLastRegion().getLabel());
+
+					imageMapping.getLastRegion().getPointList().remove(lastIndex);
+				}
+				
 			}
-
+			
+			if(backImageMapping.getRegionsList().isEmpty())
+			{
+				backStepButton.setEnabled(false);
+			}else if(backImageMapping.getRegionsList().size() == 1){
+				if(backImageMapping.getLastRegion().getPointList().isEmpty())
+				{
+					backStepButton.setEnabled(false);
+				}else
+				{
+					nextStepButton.setEnabled(true);	
+				}
+			} 
+			buildDrawingArea();
+	
 		}
 
 		private void clearDrawingAreaAction() {
@@ -193,7 +236,7 @@ public class MainView {
 
 	static class DrawingArea extends JPanel {
 		private BufferedImage image;
-		
+
 		private void drawPointList() {
 			Graphics2D g2d = (Graphics2D) image.getGraphics();
 			System.out.println("--------------imageMapping-------------");
@@ -207,25 +250,24 @@ public class MainView {
 				for (ImageRegion imageRegion : imageMapping.getRegionsList()) {
 					if (!imageRegion.getPointList().isEmpty()) {
 						drawPoints(g2d, imageRegion.getPointList());
-						if(imageRegion.getLabel() != null)
-						{
-							g2d.drawLine(imageRegion.getPointList().get(imageRegion.getPointList().size()-1).x,
-									imageRegion.getPointList().get(imageRegion.getPointList().size()-1).y,
+						if (imageRegion.getLabel() != null) {
+							g2d.drawLine(imageRegion.getPointList().get(imageRegion.getPointList().size() - 1).x,
+									imageRegion.getPointList().get(imageRegion.getPointList().size() - 1).y,
 									imageRegion.getPointList().get(0).x, imageRegion.getPointList().get(0).y);
-								
-							 Polygon polygon = new Polygon();
-							 for (Point point : imageRegion.getPointList()) {
-								 polygon.addPoint(point.x, point.y);
-							 }
-							
-							 g2d.setColor(new Color(0.0f,0.0f,1.0f,0.01f));
-							 g2d.fillPolygon(polygon);
+
+							Polygon polygon = new Polygon();
+							for (Point point : imageRegion.getPointList()) {
+								polygon.addPoint(point.x, point.y);
+							}
+
+							g2d.setColor(new Color(0.0f, 0.0f, 1.0f, 0.01f));
+							g2d.fillPolygon(polygon);
 						}
-						
+
 					}
-					
+
 				}
-				
+
 			}
 
 			repaint();
@@ -248,7 +290,6 @@ public class MainView {
 			image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
 			setBackground(transparetColor);
-			
 
 			MyMouseListener ml = new MyMouseListener();
 			addMouseListener(ml);
@@ -270,42 +311,37 @@ public class MainView {
 		}
 
 		class MyMouseListener extends MouseInputAdapter {
-			
+
 			public void mouseMoved(MouseEvent e) {
 				pointPosition.setText("");
-				pointPosition.setText("X:"+e.getPoint().x+", Y:"+e.getPoint().y);  
+				pointPosition.setText("X:" + e.getPoint().x + ", Y:" + e.getPoint().y);
 			}
 
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON1) {
 					addPoin(e.getPoint());
-				}else if (e.getButton() == MouseEvent.BUTTON3) {
+				} else if (e.getButton() == MouseEvent.BUTTON3) {
 					findImageRegions(e.getPoint());
 				}
 			}
-			
-			private void findImageRegions(Point p)
-			{
-				List<ImageRegion> ImageRegions =  imageMapping.getImageRegionsContainsPoint(p);
+
+			private void findImageRegions(Point p) {
+				List<ImageRegion> ImageRegions = imageMapping.getImageRegionsContainsPoint(p);
 				String str = "";
-				if(ImageRegions.isEmpty())
-				{
-					str = "There is not regions for the point ("+p.x+","+p.y+")";
-				}else
-				{
-					str = "There is "+ImageRegions.size()+" regions for the point ("+p.x+","+p.y+")";
+				if (ImageRegions.isEmpty()) {
+					str = "There is not regions for the point (" + p.x + "," + p.y + ")";
+				} else {
+					str = "There is " + ImageRegions.size() + " regions for the point (" + p.x + "," + p.y + ")";
 					for (ImageRegion imageRegion : ImageRegions) {
-						str += imageRegion.toString()+"\n";
+						str += imageRegion.toString() + "\n";
 					}
-						
+
 				}
-				
-				JOptionPane.showMessageDialog(frame, str,
-						"", JOptionPane.PLAIN_MESSAGE);
+
+				JOptionPane.showMessageDialog(frame, str, "", JOptionPane.PLAIN_MESSAGE);
 			}
-			
-			private void addPoin(Point p)
-			{
+
+			private void addPoin(Point p) {
 				if (imageMapping.getRegionsList().isEmpty()) {
 					if (currentImageRegion == null) {
 						currentImageRegion = new ImageRegion(null);
@@ -328,11 +364,11 @@ public class MainView {
 			}
 
 			public void mouseDragged(MouseEvent e) {
-				
+
 			}
 
 			public void mouseReleased(MouseEvent e) {
-				
+
 			}
 
 		}
