@@ -143,7 +143,7 @@ public class MainView {
 					}
 				}
 				
-				if(!backImageMapping.getLastRegion().getPointList().isEmpty())
+				if(!backImageMapping.getRegionsList().isEmpty() && !backImageMapping.getLastRegion().getPointList().isEmpty())
 				{
 					int lastIndex = backImageMapping.getLastRegion().getPointList().size() - 1;
 					
@@ -182,7 +182,7 @@ public class MainView {
 					}
 				}
 
-				if (!imageMapping.getLastRegion().getPointList().isEmpty()) {
+				if (!imageMapping.getRegionsList().isEmpty() && !imageMapping.getLastRegion().getPointList().isEmpty()) {
 					int lastIndex = imageMapping.getLastRegion().getPointList().size() - 1;
 
 					backImageMapping.getLastRegion().getPointList()
